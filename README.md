@@ -44,3 +44,9 @@ Callback when form validates. Passes form object as first param.
 
 **onInvalid**<br>
 Callback when form is invalid.
+
+## Destroy
+
+```
+Wee.validate.destroy();
+```
