@@ -1,6 +1,6 @@
 # Wee Validate
 
-Validate required form fields.
+Validate required form fields. Add `data-required` to the required inputs. You can optionally add a `data-label` to customize the error message (i.e. Email Address is required.).
 
 ## Usage
 
@@ -29,6 +29,9 @@ Class applied to the input on error.
 
 **errorElementSelector: 'ref:formError'**<br>
 Selector for the error element.
+
+**view: '<span class="form-error" data-ref="formError">{{ label ? label : "This field" }} is required.</span>'**<br>
+The view template or reference to a template to output the error.
 
 **scrollTop: true**<br>
 Scroll to the top of the form if there is an error.

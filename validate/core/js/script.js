@@ -11,6 +11,7 @@ Wee.fn.make('validate', {
 	 * @param {string} [options.inputSelector=ref:formField] - Selector for the form inputs.
 	 * @param {string} [options.errorClass=error] - Class applied to the input on error.
 	 * @param {string} [options.errorElementSelector=ref:formError] - Selector for the error element.
+	 * @param {string} [options.view=<span class="form-error" data-ref="formError">{{ label ? label : "This field" }} is required.</span>] - The view template or reference to a template to output the error.
 	 * @param {boolean} [options.scrollTop=true] - Scroll to the top of the form if there is an error.
 	 * @param {boolean} [options.ajaxRequest=false] - Prevents form submission on successful validation.
 	 * @param {(Array|function|string)} [options.onValid] - Callback when form validates. Passes form object as first param.
