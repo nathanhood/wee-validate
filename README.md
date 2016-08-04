@@ -18,25 +18,25 @@ Wee.validate.init();
 
 ### Options
 
-**formSelector: 'ref:form'**<br>
+**formSelector: `'ref:form'`**<br>
 Selector for the form.
 
-**inputSelector: 'ref:formField'**<br>
+**inputSelector: `'ref:formField'`**<br>
 Selector for the form inputs.
 
-**errorClass: 'error'**<br>
+**errorClass: `'error'`**<br>
 Class applied to the input on error.
 
-**errorElementSelector: 'ref:formError'**<br>
+**errorElementSelector: `'ref:formError'`**<br>
 Selector for the error element.
 
-**view: '<span class="form-error" data-ref="formError">{{ label ? label : "This field" }} is required.</span>'**<br>
+**view: `'<span class="form-error" data-ref="formError">{{ label ? label : "This field" }} is required.</span>'`**<br>
 The view template or reference to a template to output the error.
 
-**scrollTop: true**<br>
+**scrollTop: `true`**<br>
 Scroll to the top of the form if there is an error.
 
-**ajaxRequest: false**<br>
+**ajaxRequest: `false`**<br>
 Prevents form submission on successful validation.
 
 **onValid**<br>
