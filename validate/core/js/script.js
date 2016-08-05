@@ -53,7 +53,7 @@ Wee.fn.make('validate', {
 			if (
 				$fields.map(function(el) {
 					return $(el).val() === '';
-				}).length > 1
+				}).length > 0
 			) {
 				$fields.each(function(el) {
 					var $el = $(el);
