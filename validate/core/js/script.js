@@ -9,7 +9,7 @@ Wee.fn.make('validate', {
 	 * @param {object} options
 	 * @param {string} [options.formSelector=ref:form] - Selector for the form.
 	 * @param {string} [options.inputSelector=ref:formField] - Selector for the form inputs.
-	 * @param {string} [options.errorClass=error] - Class applied to the input on error.
+	 * @param {string} [options.errorClass=-error] - Class applied to the input on error.
 	 * @param {string} [options.errorElementSelector=ref:formError] - Selector for the error element.
 	 * @param {string} [options.view=<span class="form-error" data-ref="formError">{{ label ? label : "This field" }} is required.</span>] - The view template or reference to a template to output the error.
 	 * @param {boolean} [options.scrollTop=true] - Scroll to the top of the form if there is an error.
@@ -21,7 +21,7 @@ Wee.fn.make('validate', {
 		var settings = $.extend({
 				formSelector: 'ref:form',
 				inputSelector: 'ref:formField',
-				errorClass: 'error',
+				errorClass: '-error',
 				errorElementSelector: 'ref:formError',
 				view: '<span class="form-error" data-ref="formError">{{ label ? label : "This field" }} is required.</span>',
 				scrollTop: true,
@@ -34,7 +34,9 @@ Wee.fn.make('validate', {
 
 		$(settings.inputSelector).on('focus.' + this.namespace, function(e, el) {
 			$(el).removeClass(errorClass)
-				.next(errorElementSelector)
+				.siblings()
+				.removeClass(errorClass)
+				.siblings(errorElementSelector)
 				.remove();
 		});
 
@@ -43,7 +45,9 @@ Wee.fn.make('validate', {
 				$fields = $el.find('[data-required]');
 
 			// Clear out all errors
-			$fields.removeClass(errorClass);
+			$fields.removeClass(errorClass)
+				.siblings('label')
+				.removeClass(errorClass);
 			$(errorElementSelector).remove();
 
 			if (
@@ -56,10 +60,22 @@ Wee.fn.make('validate', {
 
 					// If an item's value is empty, add the error after the input
 					if (! $el.val()) {
-						$el.addClass(errorClass)
-							.after($.view.render(settings.view, {
+						var view = settings.view,
+							model = {
 								label: $el.attr('data-label') ? $el.data('label') : ''
-							}));
+							};
+
+						$el.addClass(errorClass)
+							.siblings('label')
+							.addClass(errorClass);
+
+						// Check if the next item is a label
+						if ($el.next('label').length) {
+							$el.after($.view.render(view, model))
+						} else {
+							$el.parent()
+								.append($.view.render(view, model));
+						}
 					}
 				});
 

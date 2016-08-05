@@ -24,7 +24,7 @@ Selector for the form.
 **inputSelector: `'ref:formField'`**<br>
 Selector for the form inputs.
 
-**errorClass: `'error'`**<br>
+**errorClass: `'-error'`**<br>
 Class applied to the input on error.
 
 **errorElementSelector: `'ref:formError'`**<br>
