@@ -64,8 +64,6 @@ Wee.fn.make('validate', {
 	 * @param {string} [options.fieldSelector=this.fieldSelector]
 	 * @param {string} [options.errorClass=this.errorClass]
 	 * @param {string} [options.errorSelector=this.errorSelector]
-	 * @param {string} [options.view=<span class="form-error" data-ref="formError">{{ message }}</span>]
-	 * @param {object} [options.model={}]
 	 * @param {(boolean|number|selector)} [options.scrollTop=0]
 	 * @return {boolean}
 	 */
@@ -77,8 +75,6 @@ Wee.fn.make('validate', {
 				fieldSelector: this.fieldSelector,
 				errorClass: this.errorClass,
 				errorSelector: this.errorSelector,
-				view: '<span class="form-error" data-ref="formError">{{ message }}</span>',
-				model: {},
 				scrollTop: 0
 			}, options),
 			errorClass = conf.errorClass,
@@ -193,7 +189,7 @@ Wee.fn.make('validate', {
 	 */
 	insertError: function($el, conf) {
 		var errorClass = conf.errorClass,
-			view = conf.view,
+			view = '<span class="form-error" data-ref="formError">{{ message }}</span>',
 			model = conf.model;
 
 		$el.addClass(errorClass)
