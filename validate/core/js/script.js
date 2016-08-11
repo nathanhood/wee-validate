@@ -123,7 +123,7 @@ Wee.fn.make('validate', {
 			});
 		}
 
-		return false;
+		return valid;
 	},
 
 	/**
