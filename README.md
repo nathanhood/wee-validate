@@ -4,8 +4,8 @@ Form validation for required fields, emails, credit cards, and cvv’s.
 
 ## Getting Started
 
-1. Add a data-ref of `form` to the form and a data-ref of `formField` to fields you want validated
-2. Add `data-required` to all required fields
+1. Add `data-ref=“form”` to the form
+2. Add `data-ref=“formField”` and `data-required` to fields you want validated
 
 The default error message is **"This field is required"**. If you want to customize the error message, add a data-label with a value that corresponds to the name of your field (i.e. `data-label="Email Address"` to output "Email Address is required.").
 
@@ -36,16 +36,26 @@ Wee.validate.init();
 **formSelector: `'ref:form'`**<br>
 Selector for the form.
 
+**fieldSelector: `'ref:formField'`**<br>
+Selector for the form field.
+
+**errorClass: `'-error'`**<br>
+Class applied to the input on error.
+
+**errorSelector: `'ref:formError'`**<br>
+Selector for the error element.
+
 **ajaxRequest: `false`**<br>
 Prevents form submission on successful validation.
+
+**scrollTop: `0`**<br>
+A pixel position (100px) or selector (‘ref:form’) for the window to scroll to if the form contains errors. To disable this feature, set it to false.
 
 **onValid**<br>
 Callback when form validates. Passes the form as the first param.
 
 **onInvalid**<br>
 Callback when form is invalid.
-
-In addition, the `init` method includes all the options available to the [isValid](#isValid) method.
 
 ## isValid
 
@@ -78,6 +88,10 @@ A pixel position (100px) or selector (‘ref:form’) for the window to scroll t
 ## bindFields
 
 Clears form fields on focus.
+
+```
+Wee.validate.bindFields();
+```
 
 ### Options
 
