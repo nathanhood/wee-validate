@@ -1,6 +1,6 @@
 # Wee Validate
 
-Form validation for required fields, emails, credit cards, and cvv’s.
+Form validation for required fields, emails, credit cards, and cvv’s. Based on Trevor Davis' [jQuery-Simple-Validate](https://github.com/davist11/jQuery-Simple-Validate).
 
 ## Getting Started
 
