@@ -8,13 +8,17 @@ Wee.fn.make('validate', {
 		this.messages = {
 			email: 'email',
 			creditCard: 'credit cart number',
-			cvv: 'cvv'
+			cvv: 'cvv',
+			zip: 'zip code',
+			phone: 'phone number (e.g. 123-456-7890)'
 		};
 
 		this.regex = {
 			email: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
 			creditCard: /^[\d\-\s]+$/,
-			cvv: /^[0-9]{3,4}$/
+			cvv: /^[0-9]{3,4}$/,
+			zip: /(^\d{5}$)|(^\d{5}-\d{4}$)/,
+			phone: /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/
 		};
 	},
 

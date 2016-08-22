@@ -16,6 +16,8 @@ To validate specific field types, add a data-type from the list below (e.g. `dat
 - email
 - creditCard
 - cvv
+- zip
+- phone
 
 ## Init
 
