@@ -7,7 +7,7 @@ Wee.fn.make('validate', {
 
 		this.messages = {
 			email: 'email',
-			creditCard: 'credit cart number',
+			creditCard: 'credit card number',
 			cvv: 'cvv',
 			zip: 'zip code',
 			phone: 'phone number (e.g. 123-456-7890)'
@@ -147,10 +147,13 @@ Wee.fn.make('validate', {
 			errorClass = conf.errorClass;
 
 		$(conf.selector).filter('[data-required]').on('focus.' + this.namespace, function(e, el) {
-			$(el).removeClass(errorClass)
+			var $el = $(el);
+
+			$el.removeClass(errorClass)
 				.siblings()
-				.removeClass(errorClass)
-				.siblings(conf.errorSelector)
+				.removeClass(errorClass);
+
+			$el.siblings(conf.errorSelector)
 				.remove();
 		});
 	},
