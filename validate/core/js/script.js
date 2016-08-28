@@ -145,16 +145,17 @@ Wee.fn.make('validate', {
 			}, options),
 			errorClass = conf.errorClass;
 
-		$(conf.selector).filter('[data-required]').on('focus.' + this.namespace, function(e, el) {
-			var $el = $(el);
+		$(conf.selector).filter('[data-required]')
+			.on('focus.' + this.namespace, function(e, el) {
+				var $el = $(el);
 
-			$el.removeClass(errorClass)
-				.siblings()
-				.removeClass(errorClass);
+				$el.removeClass(errorClass)
+					.siblings()
+					.removeClass(errorClass);
 
-			$el.siblings(conf.errorSelector)
-				.remove();
-		});
+				$el.siblings(conf.errorSelector)
+					.remove();
+			});
 	},
 
 	/**
@@ -166,20 +167,25 @@ Wee.fn.make('validate', {
 }, {
 	/**
 	 * Check for a valid credit card number
+	 * https://en.wikipedia.org/wiki/Luhn_algorithm
+	 * https://gist.github.com/ShirtlessKirk/2134376
 	 *
 	 * @private
 	 * @param {number} number
 	 * @returns {boolean}
 	 */
 	isValidCreditCard: function(number) {
-		var len = number.length,
+		var dblSum = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9],
+			position = number.length,
 			bit = 1,
 			sum = 0,
 			val;
 
-		while (len) {
-			val = parseInt(number.charAt(--len), 10);
-			sum += (bit ^= 1) ? [0, 2, 4, 6, 8, 1, 3, 5, 7, 9][val] : val;
+		while (position) {
+			// Ensure base10 (standard human readable) version of number
+			val = parseInt(number.charAt(--position), 10);
+
+			sum += (bit ^= 1) ? dblSum[val] : val;
 		}
 
 		return sum && sum % 10 === 0;
