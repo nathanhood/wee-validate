@@ -1,9 +1,14 @@
 Wee.fn.make('validate', {
 	_construct: function() {
-		this.namespace = 'formValidator';
-		this.fieldSelector = 'ref:formField';
-		this.errorClass = '-error';
-		this.errorSelector = 'ref:formError';
+		this.conf = {
+			ajaxRequest: false,
+			errorClass: '-error',
+			errorSelector: 'ref:formError',
+			fieldSelector: 'ref:formField',
+			formSelector: 'ref:form',
+			namespace: 'formValidator',
+			scrollTop: 0
+		};
 
 		this.messages = {
 			email: 'email',
@@ -15,34 +20,42 @@ Wee.fn.make('validate', {
 
 		this.regex = {
 			email: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+			creditCard: /^[\d\-\s]+$/,
 			cvv: /^[0-9]{3,4}$/,
 			zip: /(^\d{5}$)|(^\d{5}-\d{4}$)/,
 			phone: /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/
 		};
+
+		Wee.$chain('label', function() {
+			var $label = this.siblings('label');
+
+			if (! $label.length) {
+				$label = this.closest('label');
+			}
+
+			return $label;
+		})
 	},
 
 	/**
 	 * Init validation via form submission
 	 *
 	 * @param {object} options
-	 * @param {string} [options.formSelector=ref:form]
-	 * @param {boolean} [options.ajaxRequest=false]
-	 * @param {(Array|function|string)} [options.onValid] - Callback when form validates. Passes form as first param.
-	 * @param {(Array|function|string)} [options.onInvalid] - Callback when form is invalid.
+	 * @param {string} [options.formSelector=this.conf.formSelector]
+	 * @param {boolean} [options.ajaxRequest=this.conf.ajaxRequest]
+	 * @param {function} [options.onValid] - Callback when form validates. Passes form as first param.
+	 * @param {function} [options.onInvalid] - Callback when form is invalid.
 	 */
 	init: function(options) {
 		var scope = this,
-			conf = $.extend({
-				formSelector: 'ref:form',
-				ajaxRequest: false
-			}, options),
+			conf = scope.extendConfig(options),
 			validCallback = conf.onValid,
 			invalidCallback = conf.onInvalid;
 
-		scope.bindFields(conf);
+		scope.bindFields();
 
-		$(conf.formSelector).on('submit.' + this.namespace, function(e, el) {
-			if (! scope.isValid(conf)) {
+		$(conf.formSelector).on('submit.' + conf.namespace, function(e, el) {
+			if (! scope.isValid()) {
 				if (invalidCallback) {
 					invalidCallback();
 				}
@@ -64,9 +77,9 @@ Wee.fn.make('validate', {
 	 * Check for validation errors
 	 *
 	 * @param {object} options
-	 * @param {string} [options.fieldSelector=this.fieldSelector]
-	 * @param {string} [options.errorClass=this.errorClass]
-	 * @param {string} [options.errorSelector=this.errorSelector]
+	 * @param {string} [options.fieldSelector=this.conf.fieldSelector]
+	 * @param {string} [options.errorClass=this.conf.errorClass]
+	 * @param {string} [options.errorSelector=this.conf.errorSelector]
 	 * @param {(boolean|number|selector)} [options.scrollTop=0]
 	 * @return {boolean}
 	 */
@@ -74,19 +87,15 @@ Wee.fn.make('validate', {
 		var scope = this,
 			priv = scope.$private,
 			valid = true,
-			conf = $.extend({
-				fieldSelector: this.fieldSelector,
-				errorClass: this.errorClass,
-				errorSelector: this.errorSelector,
-				scrollTop: 0
-			}, options),
+			conf = scope.extendConfig(options),
 			errorClass = conf.errorClass,
 			scrollTop = conf.scrollTop,
-			$fields = $(conf.fieldSelector);
+			$fields = $(conf.fieldSelector),
+			getMsg = priv.getMessage;
 
 		// Clear out errors fields
 		$fields.removeClass(errorClass)
-			.siblings('label')
+			.label()
 			.removeClass(errorClass);
 
 		$(conf.errorSelector).remove();
@@ -97,22 +106,13 @@ Wee.fn.make('validate', {
 
 			// Check for a value
 			if (! val) {
-				conf.model = {
-					message: ($el.attr('data-label') ?
-						$el.data('label') :
-						'This field') + ' is required.'
-				};
-
-				valid = priv.insertError($el, conf);
+				valid = priv.insertError($el, getMsg('required', $el.data('label')));
 			} else if ($el.attr('data-type')) {
 				var type = $el.data('type');
 
+				// Check for valid input
 				if (! scope.regex[type].test(val) || (type === 'creditCard' && ! priv.isValidCreditCard(val))) {
-					conf.model = {
-						message: 'Please enter a valid ' + scope.messages[type] + '.'
-					};
-
-					valid = priv.insertError($el, conf);
+					valid = priv.insertError($el, getMsg('invalid', scope.messages[type]));
 				}
 			}
 		});
@@ -133,24 +133,20 @@ Wee.fn.make('validate', {
 	 * Bind form error clearing for fields
 	 *
 	 * @param {object} options
-	 * @param {string} [options.selector=this.fieldSelector]
-	 * @param {string} [options.errorClass=this.errorClass]
-	 * @param {string} [options.errorSelector=this.errorSelector]
+	 * @param {string} [options.selector=this.conf.fieldSelector]
+	 * @param {string} [options.errorClass=this.conf.errorClass]
+	 * @param {string} [options.errorSelector=this.conf.errorSelector]
 	 */
 	bindFields: function(options) {
-		var conf = $.extend({
-				selector: this.fieldSelector,
-				errorClass: this.errorClass,
-				errorSelector: this.errorSelector
-			}, options),
+		var conf = this.extendConfig(options),
 			errorClass = conf.errorClass;
 
-		$(conf.selector).filter('[data-required]')
-			.on('focus.' + this.namespace, function(e, el) {
+		$(conf.fieldSelector).filter('[data-required]')
+			.on('focus.' + conf.namespace, function(e, el) {
 				var $el = $(el);
 
 				$el.removeClass(errorClass)
-					.siblings()
+					.label()
 					.removeClass(errorClass);
 
 				$el.siblings(conf.errorSelector)
@@ -162,9 +158,15 @@ Wee.fn.make('validate', {
 	 * Destroy all validate methods
 	 */
 	destroy: function() {
-		$.events.off(false, '.' + this.namespace);
+		$.events.off(false, '.' + this.conf.namespace);
 	}
 }, {
+	extendConfig: function(options) {
+		this.conf = $.extend(this.conf, options);
+
+		return this.conf;
+	},
+
 	/**
 	 * Check for a valid credit card number
 	 * https://en.wikipedia.org/wiki/Luhn_algorithm
@@ -196,25 +198,42 @@ Wee.fn.make('validate', {
 	 *
 	 * @private
 	 * @param {object} $el
-	 * @param {object} conf
+	 * @param {string} msg
 	 * @returns {boolean}
 	 */
-	insertError: function($el, conf) {
-		var errorClass = conf.errorClass,
-			view = '<span class="form-error" data-ref="formError">{{ message }}</span>',
-			model = conf.model;
+	insertError: function($el, msg) {
+		var errorClass = this.conf.errorClass;
 
 		$el.addClass(errorClass)
-			.siblings('label')
+			.label()
 			.addClass(errorClass);
 
 		if ($el.next('label').length) {
-			$el.after($.view.render(view, model));
+			$el.after(msg);
 		} else {
-			$el.parent()
-				.append($.view.render(view, model));
+			$el.parent().append(msg);
 		}
 
 		return false;
+	},
+
+	/**
+	 * Generate validation message to be displayed to user
+	 *
+	 * @param {string} type
+	 * @param {string} [field]
+	 * @returns {string}
+	 */
+	getMessage: function(type, field) {
+		var data = {
+			type: type,
+			errorSelector: this.conf.errorSelector
+		};
+
+		if (field) {
+			data.field = field;
+		}
+
+		return $.view.render('validate.error', data);
 	}
 });
