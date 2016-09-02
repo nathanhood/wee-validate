@@ -1,6 +1,6 @@
 {
 	"name": "wee-validate",
-	"version": "0.3.1",
+	"version": "0.4.0",
 	"description": "Validate required form fields.",
 	"homepage": "https://github.com/ryanbrookepayne/wee-validate",
 	"author": "Ryan Payne - Caddis",

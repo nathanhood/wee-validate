@@ -1,11 +1,14 @@
 Wee.fn.make('validate', {
 	_construct: function() {
 		this.conf = {
-			ajaxRequest: false,
+			activeClass: '-is-active',
+			ajax: false,
 			errorClass: '-error',
 			errorSelector: 'ref:formError',
 			fieldSelector: 'ref:formField',
+			formContext: null,
 			formSelector: 'ref:form',
+			globalErrorsSelector: null,
 			namespace: 'formValidator',
 			scrollTop: 0
 		};
@@ -48,11 +51,17 @@ Wee.fn.make('validate', {
 	 */
 	init: function(options) {
 		var scope = this,
-			conf = scope.extendConfig(options),
+			conf = scope.$private.extendConfig(options),
 			validCallback = conf.onValid,
-			invalidCallback = conf.onInvalid;
+			invalidCallback = conf.onInvalid,
+			options = {};
 
 		scope.bindFields();
+
+		// Add optional context to forms in case there are multiple on page
+		if (conf.formContext) {
+			options.context = conf.formContext;
+		}
 
 		$(conf.formSelector).on('submit.' + conf.namespace, function(e, el) {
 			if (! scope.isValid()) {
@@ -67,10 +76,10 @@ Wee.fn.make('validate', {
 				}
 			}
 
-			if (conf.ajaxRequest) {
+			if (conf.ajax) {
 				e.preventDefault();
 			}
-		});
+		}, options);
 	},
 
 	/**
@@ -87,18 +96,11 @@ Wee.fn.make('validate', {
 		var scope = this,
 			priv = scope.$private,
 			valid = true,
-			conf = scope.extendConfig(options),
-			errorClass = conf.errorClass,
-			scrollTop = conf.scrollTop,
-			$fields = $(conf.fieldSelector),
-			getMsg = priv.getMessage;
+			conf = scope.$private.extendConfig(options),
+			$fields = $(conf.fieldSelector, conf.formSelector),
+			getMsg = priv.getMessage.bind(priv);
 
-		// Clear out errors fields
-		$fields.removeClass(errorClass)
-			.label()
-			.removeClass(errorClass);
-
-		$(conf.errorSelector).remove();
+		priv.clearErrorFields();
 
 		$fields.filter('[data-required]').each(function(el) {
 			var $el = $(el),
@@ -106,24 +108,25 @@ Wee.fn.make('validate', {
 
 			// Check for a value
 			if (! val) {
-				valid = priv.insertError($el, getMsg('required', $el.data('label')));
+				valid = false;
+
+				priv.insertError($el, getMsg('required', $el.data('label')));
 			} else if ($el.attr('data-type')) {
 				var type = $el.data('type');
 
+				valid = false;
+
 				// Check for valid input
 				if (! scope.regex[type].test(val) || (type === 'creditCard' && ! priv.isValidCreditCard(val))) {
-					valid = priv.insertError($el, getMsg('invalid', scope.messages[type]));
+					priv.insertError($el, getMsg('invalid', scope.messages[type]));
 				}
 			}
 		});
 
-		// Scroll to a number or element
-		if (! valid && scrollTop !== false) {
-			$(Wee._body).tween({
-				scrollTop: typeof scrollTop == 'number' ?
-					scrollTop :
-					$(scrollTop).offset().top
-			});
+		priv.scrollToTop(valid);
+
+		if (valid) {
+			priv.clearErrorFields();
 		}
 
 		return valid;
@@ -138,7 +141,7 @@ Wee.fn.make('validate', {
 	 * @param {string} [options.errorSelector=this.conf.errorSelector]
 	 */
 	bindFields: function(options) {
-		var conf = this.extendConfig(options),
+		var conf = this.$private.extendConfig(options),
 			errorClass = conf.errorClass;
 
 		$(conf.fieldSelector).filter('[data-required]')
@@ -161,10 +164,40 @@ Wee.fn.make('validate', {
 		$.events.off(false, '.' + this.conf.namespace);
 	}
 }, {
-	extendConfig: function(options) {
-		this.conf = $.extend(this.conf, options);
+	/**
+	 * Clear out all existing errors
+	 */
+	clearErrorFields: function() {
+		var conf = this.conf,
+			errorClass = conf.errorClass;
 
-		return this.conf;
+		// Clear out errors fields
+		$(conf.fieldSelector, conf.formSelector)
+			.removeClass(errorClass)
+			.label()
+			.removeClass(errorClass);
+
+		$(conf.errorSelector, conf.formSelector).remove();
+
+		// Empty global errors container if exists
+		if (conf.globalErrorsSelector) {
+			$(conf.globalErrorsSelector).removeClass(conf.activeClass).empty();
+		}
+	},
+
+	/**
+	 * Extend base config options and expose config to private scope
+	 *
+	 * @param {object} options
+	 * @returns {object}
+	 */
+	extendConfig: function(options) {
+		var pub = this.$public;
+
+		pub.conf = $.extend(pub.conf, options);
+		this.conf = pub.conf;
+
+		return pub.conf;
 	},
 
 	/**
@@ -199,22 +232,25 @@ Wee.fn.make('validate', {
 	 * @private
 	 * @param {object} $el
 	 * @param {string} msg
-	 * @returns {boolean}
 	 */
 	insertError: function($el, msg) {
-		var errorClass = this.conf.errorClass;
+		var conf = this.conf,
+			errorClass = conf.errorClass;
 
 		$el.addClass(errorClass)
 			.label()
 			.addClass(errorClass);
 
-		if ($el.next('label').length) {
-			$el.after(msg);
+		// Append to main error container or under each input
+		if (conf.globalErrorsSelector) {
+			$(conf.globalErrorsSelector).addClass(conf.activeClass).append(msg);
 		} else {
-			$el.parent().append(msg);
+			if ($el.next('label').length) {
+				$el.after(msg);
+			} else {
+				$el.parent().append(msg);
+			}
 		}
-
-		return false;
 	},
 
 	/**
@@ -227,7 +263,7 @@ Wee.fn.make('validate', {
 	getMessage: function(type, field) {
 		var data = {
 			type: type,
-			errorSelector: this.conf.errorSelector
+			errorSelector: this.conf.errorSelector.replace('ref:', '')
 		};
 
 		if (field) {
@@ -235,5 +271,22 @@ Wee.fn.make('validate', {
 		}
 
 		return $.view.render('validate.error', data);
+	},
+
+	/**
+	 * Scroll to a number or element to see form errors if anything is invalid
+	 *
+	 * @param {boolean} valid
+	 */
+	scrollToTop: function(valid) {
+		var scrollTop = this.conf.scrollTop;
+
+		if (! valid && scrollTop !== false) {
+			$(Wee._body).tween({
+				scrollTop: typeof scrollTop == 'number' ?
+					scrollTop :
+					$(scrollTop).offset().top
+			});
+		}
 	}
 });

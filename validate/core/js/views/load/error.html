@@ -1,9 +1,9 @@
-<span class="form-error" data-ref="{{ selector }}">
-	{{ type|is('required') }}
+<span class="form-error" data-ref="{{ errorSelector }}">
+	{{ #type|is('required') }}
 		{{ field||'This field' }} is required.
 	{{ /type }}
 
-	{{ type|is('invalid') }}
+	{{ #type|is('invalid') }}
 		Please enter a valid {{ field||'value' }}.
 	{{ /type }}
 </span>
